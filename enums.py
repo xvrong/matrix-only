@@ -6,7 +6,8 @@ class IDType(Enum):
     BASIC = 1,
     STRUCT = 2,
     REFERENCE = 3,
-    FUNCTION = 4
+    FUNCTION = 4,
+    ARRAY = 5
 
 
 class BasicType(Enum):

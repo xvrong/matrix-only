@@ -88,6 +88,7 @@ reserved = {
     'continue'  : 'CONTINUE',
     'break'     : 'BREAK',
     'func'      : 'FUNC',
+    'main'      : 'MAIN',
     'return'    : 'RETURN',
     'scan'      : 'SCAN',
     'print'     : 'PRINT',
@@ -100,7 +101,8 @@ reserved = {
     'int'       : 'INT',
     'float'     : 'FLOAT',
     'double'    : 'DOUBLE',
-    'struct'    : 'STRUCT'
+    'struct'    : 'STRUCT',
+    'template'  : 'TEMPLATE'
 }
 
 tokens = tokens + list(reserved.values())
