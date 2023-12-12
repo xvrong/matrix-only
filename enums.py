@@ -14,9 +14,10 @@ class BasicType(Enum):
     VOID = 0
     BOOL = 1
     INT = 2
-    FLOAT = 3
-    DOUBLE = 4
-    STRING = 5
+    FLOAT16 = 3
+    FLOAT32 = 4
+    FLOAT64 = 5
+    STRING = 6
 
 
 class UnaryOp(Enum):

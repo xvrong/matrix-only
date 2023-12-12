@@ -42,8 +42,8 @@ tokens = [
     'GENERICID',        # 泛型 标识符
     'INTCON',           # 10进制数字
     'FLOATCON',         # 32位浮点数
-    'DOUBLECON',        # 64位浮点数
-    'STRINGCON',        # 字符串
+    # 'DOUBLECON',        # 64位浮点数
+    'STRCON',           # 字符串
     'PLUS',             # +
     'MINUS',            # -
     'OR',               # |
@@ -99,10 +99,13 @@ reserved = {
     'void'      : 'VOID',
     'bool'      : 'BOOL',
     'int'       : 'INT',
-    'float'     : 'FLOAT',
-    'double'    : 'DOUBLE',
+    'f16'       : 'FLOAT16',
+    'f32'       : 'FLOAT32',
+    'f64'       : 'FLOAT64',
+    # 'float'     : 'FLOAT',
+    # 'double'    : 'DOUBLE',
     'struct'    : 'STRUCT',
-    'template'  : 'TEMPLATE'
+    'template'  : 'TEMPLATE',
 }
 
 tokens = tokens + list(reserved.values())
@@ -164,8 +167,9 @@ def t_INTCON(t):
 
 @TOKEN(t_FLOATCON)
 def t_FLOATCON(t):
-    t.type = 'FLOATCON' if t.value[-1] == 'f' else 'DOUBLECON'
-    t.value = float(t.value[:-1] if t.value[-1] == 'f' else t.value)
+    # t.type = 'FLOATCON' if t.value[-1] == 'f' else 'DOUBLECON'
+    # t.value = float(t.value[:-1] if t.value[-1] == 'f' else t.value)
+    t.value = float(t.value)
     return t
 
 
