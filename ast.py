@@ -28,7 +28,7 @@ class Node(object):
 
 
 class CompUnit(Node):
-    def __init__(self, row) -> None:
+    def __init__(self, row, mainFuncDef: FuncDef) -> None:
         super().__init__(row)
         self.allDeclarationList: List[Declaration] = []
         self.blockDeclList: List[BlockDecl] = []
@@ -36,6 +36,7 @@ class CompUnit(Node):
         self.templateBlockDeclList: List[TemplateDecl] = []
         self.templateFuncDefList: List[TemplateDecl] = []
         self.funcDefList: List[FuncDef] = []
+        self.mainFuncDef = mainFuncDef
 
     def add_declaration(self, decl):
         if isinstance(decl, BlockDecl):
@@ -62,6 +63,7 @@ class CompUnit(Node):
             ret += decl.__str__(ind+1)
         for defi in self.funcDefList:
             ret += defi.__str__(ind+1)
+        ret += self.mainFuncDef.__str__(ind+1)
         return ret
 
 
@@ -84,34 +86,34 @@ class TypeDefDecl(BlockDecl):
 
 
 class VarDecl(BlockDecl):
-    def __init__(self, row, typeSpec: Optional[TypeSpecifier], varDefList: List[VarDef], isConst: bool):
+    def __init__(self, row, initDeclList: List[InitDecl], isConst: bool):
         super().__init__(row)
-        self.typeSpec = typeSpec
-        self.varDefList = varDefList
-        for vardef in self.varDefList:
-            vardef.typeSpec = self.typeSpec
+        self.initDeclList = initDeclList
         if isConst:
-            for vardef in self.varDefList:
-                vardef.isConst = True
+            for initdecl in self.initDeclList:
+                initdecl.isConst = True
 
     def __str__(self, ind=Indent()):
         ret = f'{ind}VarDecl:\n'
-        for vardef in self.varDefList:
-            ret += vardef.__str__(ind+1)
+        for initdecl in self.initDeclList:
+            ret += initdecl.__str__(ind+1)
         return ret
 
 
-class VarDef(Node):
-    def __init__(self, row, ident: str, initVal: Expression):
+class InitDecl(Node):
+    def __init__(self, row, typeSpec: Optional[TypeSpecifier], ident: str, initVal: Optional[Expression]):
         super().__init__(row)
         self.ident = ident
-        self.typeSpec = None
+        self.typeSpec = typeSpec
         self.initVal = initVal
         self.isConst = False
 
     def __str__(self, ind=Indent()):
-        const = '(const)' if self.isConst else ''
-        return f'{ind}VarDef: {const}\n{ind+1}ID: {self.ident}\n{ind+1}Type: {self.typeSpec.__str__(ind+2) if self.typeSpec else "(empty)"}\n{ind+1}Initializer:\n{self.initVal.__str__(ind+2)}'
+        ret = f'{ind}InitDecl: {"(const)" if self.isConst else ""}\n'
+        ret += f'{ind+1}Type: {self.typeSpec.__str__(ind+2) if self.typeSpec else "(empty)"}\n'
+        ret += f'{ind+1}ID: {self.ident}\n'
+        ret += f'{ind+1}Initializer:\n{self.initVal.__str__(ind+2) if self.typeSpec else ""}'
+        return ret
 
 
 class FuncDecl(BlockDecl):
@@ -145,6 +147,15 @@ class FuncDef(Declaration):
 
     def __str__(self, ind=Indent()):
         return f'{ind}Function Definition:\n{self.funcDecl.__str__(ind+1)}{self.blockStmt.__str__(ind+1)}'
+
+
+class MainFuncDef(Node):
+    def __init__(self, row, blockStmt: BlockStmt):
+        super().__init__(row)
+        self.blockStmt = blockStmt
+
+    def __str__(self, ind=Indent()):
+        return f'{ind}MainFuncDef:\n{self.blockStmt.__str__(ind+1)}'
 
 
 class TypeSpecifier(Node):
@@ -185,7 +196,16 @@ class ArrayType(TypeSpecifier):
         self.size = size
 
     def __str__(self, ind=Indent()):
-        return f'{self.typeSpec.__str__(ind+1)}[{self.size or ""}]'
+        return f'{self.typeSpec.__str__(ind+1)}[{self.size if self.size else ""}]'
+
+
+class ReferType(TypeSpecifier):
+    def __init__(self, row, typeSpec: TypeSpecifier):
+        super().__init__(row)
+        self.typeSpec = typeSpec
+
+    def __str__(self, ind=Indent()):
+        return f'{self.typeSpec.__str__(ind+1)} reference'
 
 
 class StructType(TypeSpecifier):
@@ -223,20 +243,25 @@ class FuncType(TypeSpecifier):
 
 
 class FuncParam(Node):
-    def __init__(self, row, ident: str, paramType: Optional[TypeSpecifier] = None):
+    def __init__(self, row, paramType: Optional[TypeSpecifier] = None, ident: str = ""):
         super().__init__(row)
-        self.ident = ident
         self.paramType = paramType
+        self.ident = ident
 
     def __str__(self, ind=Indent()):
-        return f'{ind}FuncParam:\n{ind+1}ID: {self.ident}\n{ind+1}Type: {self.paramType.__str__(ind+2) if self.paramType else "(Empty)"}\n'
+        ret = f'{ind}FuncParam:\n'
+        ret += f'{ind+1}Type: {self.paramType.__str__(ind+2) if self.paramType else "(Empty)"}\n'
+        ret += f'{ind+1}ID: {self.ident}\n'
+        return ret
 
+
+# 结构体
 
 class StructDecl(BlockDecl):
     def __init__(self, row, ident: str, memberList: List[StructMember]):
         super().__init__(row)
         self.ident = ident
-        self.memberDeclList: List[MemberDecl] = []
+        self.memberDeclList: List[MemberVarDecl] = []
         self.consFuncDefList: List[ConsFuncDef] = []
         self.memberFuncDefList: List[MemberFuncDef] = []
 
@@ -244,7 +269,7 @@ class StructDecl(BlockDecl):
             self.add_member(member)
 
     def add_member(self, member):
-        if isinstance(member, MemberDecl):
+        if isinstance(member, MemberVarDecl):
             self.memberDeclList.append(member)
         elif isinstance(member, ConsFuncDef):
             self.consFuncDefList.append(member)
@@ -269,7 +294,7 @@ class StructMember(Node):
     pass
 
 
-class MemberDecl(StructMember):
+class MemberVarDecl(StructMember):
     def __init__(self, row, ident: str, typeSpec: TypeSpecifier):
         super().__init__(row)
         self.ident = ident
@@ -465,7 +490,7 @@ class PrimaryExp(PostfixExp):
     pass
 
 
-class LiteralPrE(PrimaryExp):
+class LiteralPri(PrimaryExp):
     def __init__(self, row, literal):
         super().__init__(row)
         self.literal = literal
@@ -474,7 +499,7 @@ class LiteralPrE(PrimaryExp):
         return f'{ind}LiteralPrE: ({self.literal.type}) {self.literal.value}\n'
 
 
-class IdentPrE(PrimaryExp):
+class IdentPri(PrimaryExp):
     def __init__(self, row, ident: str):
         super().__init__(row)
         self.ident = ident
@@ -483,7 +508,7 @@ class IdentPrE(PrimaryExp):
         return f'{ind}IdentPrE: {self.ident}\n'
 
 
-class ExpPrE(PrimaryExp):
+class ExpPri(PrimaryExp):
     def __init__(self, row, exp: Expression):
         super().__init__(row)
         self.exp = exp
@@ -529,6 +554,19 @@ class ReferExp(PostfixExp):
         return ret
 
 
+class CastExp(PostfixExp):
+    def __init__(self, row, typeSpec: TypeSpecifier, castedExp: Expression):
+        super().__init__(row)
+        self.typeSpec = typeSpec
+        self.castedExp = castedExp
+
+    def __str__(self, ind=Indent()):
+        ret = f'{ind}CastExp:\n'
+        ret += f'{ind+1}Type: {self.typeSpec.__str__(ind+2)}\n'
+        ret += f'{ind+1}castedExp:\n{self.castedExp.__str__(ind+2)}\n'
+        return ret
+
+
 class FuncCallExp(PostfixExp):
     def __init__(self, row, funcExp: PostfixExp, genericSpecList: List[TypeSpecifier], paramExpList: List[Expression]):
         super().__init__(row)
@@ -549,15 +587,17 @@ class FuncCallExp(PostfixExp):
 
 
 class IOExp(PostfixExp):
-    def __init__(self, row, ident: str, ioType: IOType, typeSpec: TypeSpecifier):
+    def __init__(self, row, ioType: IOType, typeSpec: TypeSpecifier, inIdent: str = "", outExp: Expression = None):
         super().__init__(row)
-        self.ident = ident
+        self.inIdent = inIdent
+        self.outExp = outExp
         self.ioType = ioType
         self.typeSpec = typeSpec
 
     def __str__(self, ind=Indent()):
         ret = f'{ind}IOExp:\n'
-        ret += f'{ind+1}ident: {self.ident}\n'
+        ret += f'{ind+1}inIdent: {self.inIdent}\n'
+        ret += f'{ind+1}outExp: \n{self.outExp.__str__(ind+2)}\n'
         ret += f'{ind+1}ioType: {self.ioType.name}\n'
         ret += f'{ind+1}type: {self.typeSpec.__str__(ind+2)}\n'
         return ret

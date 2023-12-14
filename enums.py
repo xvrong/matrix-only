@@ -49,5 +49,5 @@ class BinaryOp(Enum):
 
 
 class IOType(Enum):
-    IN = 0
-    OUT = 1
+    SCAN = 0
+    PRINT = 1

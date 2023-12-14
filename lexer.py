@@ -2,33 +2,29 @@ import ply.lex as lex
 from ply.lex import TOKEN
 
 context = {
-    "struct" : [],
-    "interface" : [],
-    "type_alias" : [],
-    "generic_top" : [],
-    "generic_func" : [],
-    "last_scope_is_top" : False,
+    "struct": [],
+    "typedef": [],
+    "generic_type": [],
+    # "generic_func": [],
+    # "last_scope_is_struct": False,
 }
 
 
 def init_lexer_context():
-    context["struct"].clear()  # strcut名
-    context["interface"].clear()  # interface名
-    context["type_alias"].clear()  # type_alias名
-    context["generic_top"].clear()  # struct和interface的泛型名
-    context["generic_func"].clear()  # function泛型名
-    context["last_scope_is_top"] = False
+    context["struct"].clear()  # struct
+    context["typedef"].clear()  # typedef名
+    context["generic_type"].clear()  # struct泛型名
+    # context["generic_func"].clear()  # function泛型名
+    # context["last_scope_is_struct"] = False
 
 
 def query_name(name):
-    #return None
+    # return None
     if name in context["struct"]:
         return 'STRUCTID'
-    elif name in context["interface"]:
-        return 'INTERFACEID'
-    elif name in context["type_alias"]:
-        return 'TYPEALIASID'
-    elif name in context["generic_top"] or name in context["generic_func"]:
+    elif name in context["typedef"]:
+        return 'TYPEDEFID'
+    elif name in context["generic_type"]:
         return 'GENERICID'
     else:
         return None
@@ -38,7 +34,7 @@ def query_name(name):
 tokens = [
     'ID',               # 标识符
     'STRUCTID',         # Struct 标识符
-    'TYPEALIASID',      # TypeAlias 标识符
+    'TYPEDEFID',        # TypeDef 标识符
     'GENERICID',        # 泛型 标识符
     'INTCON',           # 10进制数字
     'FLOATCON',         # 32位浮点数
@@ -93,15 +89,16 @@ reserved = {
     'scan'      : 'SCAN',
     'print'     : 'PRINT',
     'ref'       : 'REF',
-    'type'      : 'TYPE',
+    'typedef'   : 'TYPEDEF',
+    'var'       : 'VAR',
     'const'     : 'CONST',
     'auto'      : 'AUTO',
     'void'      : 'VOID',
     'bool'      : 'BOOL',
     'int'       : 'INT',
-    'f16'       : 'FLOAT16',
-    'f32'       : 'FLOAT32',
-    'f64'       : 'FLOAT64',
+    'f16'       : 'F16',
+    'f32'       : 'F32',
+    'f64'       : 'F64',
     # 'float'     : 'FLOAT',
     # 'double'    : 'DOUBLE',
     'struct'    : 'STRUCT',
