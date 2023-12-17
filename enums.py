@@ -14,9 +14,9 @@ class BasicType(Enum):
     VOID = 0
     BOOL = 1
     INT = 2
-    FLOAT16 = 3
-    FLOAT32 = 4
-    FLOAT64 = 5
+    F16 = 3
+    F32 = 4
+    F64 = 5
     STRING = 6
 
 

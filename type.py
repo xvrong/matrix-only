@@ -2,7 +2,7 @@ from __future__ import annotations
 import copy
 from typing import Dict, List, Optional, Tuple
 from llvmlite import ir
-from ast import Node
+from ast1 import Node
 from enums import BasicType, IDType
 from error import SemanticError
 import symboltable

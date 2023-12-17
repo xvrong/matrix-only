@@ -143,35 +143,31 @@ t_DOT           = r'\.'
 t_SEMICOLON     = r';'
 t_GENERICMARK   = r'\''
 
-# 复杂TOKEN
-t_ID            = r'[a-zA-Z_][a-zA-Z_0-9]*'
-t_INTCON           = r'\d+'
-t_FLOATCON         = r'[-+]?(([0-9]*\.[0-9]+)|([0-9]+\.))(f)?'
-t_STRINGCON        = r'\"((\\.)|[^"\\\n])*\"'
 
 
-@TOKEN(t_ID)
-def t_ID(t):
-    t.type = reserved.get(t.value) or query_name(t.value) or 'ID'
-    return t
-
-
-@TOKEN(t_INTCON)
-def t_INTCON(t):
-    t.value = int(t.value)
-    return t
-
-
-@TOKEN(t_FLOATCON)
 def t_FLOATCON(t):
+    r'[-+]?(([0-9]*\.[0-9]+)|([0-9]+\.))'
+    t.type = 'FLOATCON'
     # t.type = 'FLOATCON' if t.value[-1] == 'f' else 'DOUBLECON'
     # t.value = float(t.value[:-1] if t.value[-1] == 'f' else t.value)
     t.value = float(t.value)
     return t
 
 
-@TOKEN(t_STRINGCON)
+def t_ID(t):
+    r'[a-zA-Z_][a-zA-Z_0-9]*'
+    t.type = reserved.get(t.value) or query_name(t.value) or 'ID'
+    return t
+
+
+def t_INTCON(t):
+    r'\d+'
+    t.value = int(t.value)
+    return t
+
+
 def t_STRINGCON(t):
+    r'\"((\\.)|[^"\\\n])*\"'
     t.value = t.value[1:-1]
     return t
 

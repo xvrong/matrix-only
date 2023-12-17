@@ -1,0 +1,40 @@
+var f32:a = 1;
+const f64:b = 1.1;
+
+var bool : c = 1;
+
+var f32:d  = 1.1;
+
+func const_test() {
+    const a = 1;
+    # a = 2;
+    # b = 3.0;
+}
+
+func is_equal(int: x , int: y) = bool {
+    if (x == y)
+        return 1;
+    return 0;
+}
+
+template<T, U>
+func max(T: x , U: y) {
+    if (y > x)
+        return y;
+    else
+        return x;
+}
+
+struct Position {
+    f32 : x;
+    f32 : y;
+    f32 : z;
+
+    func Position (&Position: self) {
+        self.x = 0.0;
+    }
+
+    func length_square(&Position: self) = f32 {
+        return self.x * self.x + self.y * self.y + self.z * self.z;
+    }
+};
